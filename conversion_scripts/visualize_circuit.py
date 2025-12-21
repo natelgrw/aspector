@@ -188,7 +188,7 @@ def main():
     """
     Main function to visualize a circuit.
     """
-    input_file = "data/circuit_dataset.pt"
+    input_file = "data/sample_circuit.pt"
     output_file = "data/sample_circuit_vis.png"
     index = 0
     
