@@ -170,11 +170,6 @@ def visualize_circuit(data, index, output_path, source_filename=None):
         if val_strs:
             param_text += f"{name}: {', '.join(val_strs)}\n"
 
-    param_text += "\nNET VALUES:\n\n"
-    for i, name in enumerate(net_names):
-        f = net_feats[i]
-        pass
-
     plt.figtext(0.82, 0.72, param_text, fontsize=9, verticalalignment='top', 
                 bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.7))
     
