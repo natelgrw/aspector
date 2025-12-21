@@ -3,7 +3,7 @@ Version: **0.1.2**
 Date Released: **12/21/2025**
 
 - ASPECTOR Foundry v1.1.1 Release
-- Conversion scripts between netlist, graph, JSON, and image formats
+- Conversion scripts between netlist, graph, JSON, and image formats for single layer op-amps
 
 Version: **0.1.1**
 
