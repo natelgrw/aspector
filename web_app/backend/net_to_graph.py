@@ -64,7 +64,7 @@ class NetlistToGraph:
         if params and val_str in params:
             return params[val_str]
         
-        match = re.match(r'([-+]?[\d\.]+)([a-zA-Z]*)', val_str)
+        match = re.match(r'([-+]?[\d\.]+(?:[eE][-+]?\d+)?)([a-zA-Z]*)', val_str)
         if match:
             num, suffix = match.groups()
             try:
@@ -160,6 +160,24 @@ class NetlistToGraph:
         comp_params_str = " ".join(parts[type_idx+1:])
         comp_params = dict(re.findall(r'(\w+)=([\w\.\+-e]+)', comp_params_str))
         
+        # Helper to find positional value if named param is missing
+        def find_positional_val():
+            for p_str in parts[type_idx+1:]:
+                # skip key=value pairs
+                if '=' in p_str: continue
+                val = self._parse_value(p_str, params)
+                if val > 0: return val
+            return 0.0
+
+        # Handle resistor/capacitor positional values
+        if type_found == 'resistor' and 'r' not in comp_params and 'nR' not in comp_params:
+            pos_val = find_positional_val()
+            if pos_val > 0: comp_params['r'] = pos_val
+            
+        if type_found == 'capacitor' and 'c' not in comp_params and 'nC' not in comp_params:
+            pos_val = find_positional_val()
+            if pos_val > 0: comp_params['c'] = pos_val
+
         sizing = {
             'l': self._parse_value(comp_params.get('l', 0), params),
             'nfin': self._parse_value(comp_params.get('nfin', 0), params) or self._parse_value(comp_params.get('w', 0), params),
@@ -167,6 +185,9 @@ class NetlistToGraph:
             'c': self._parse_value(comp_params.get('nC', 0), params) or self._parse_value(comp_params.get('c', 0), params),
             'dc': self._parse_value(comp_params.get('dc', 0), params),
         }
+        
+        # Debugging: Print parsing result
+        print(f"[DEBUG] Parsed {comp_name}: params={sizing}, raw_str='{comp_params_str}'")
 
         if comp_name in ['V0', 'V1'] or comp_name.startswith('V_V') or comp_name in ['VN', 'VP2', 'VN2']:
             if type_found == 'vsource':

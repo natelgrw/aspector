@@ -2,10 +2,9 @@
 
 ASPECTOR is a software suite under active development that aids engineers in designing op-amps at the netlist-transistor level. The eventual goal of ASPECTOR is to train a foundation model capable of automating op-amp design across the entire topology and parametization space.
 
-This repository serves as a home base for ASPECTOR, containing miscellaneous scripts,
-data, and links to core modules.
+This repository serves as a home base for ASPECTOR, containing a deployable graph visualization web app for visualizing `.scs` netlists and miscellaneous scripts for data type conversion.
 
-Current Version: **0.1.2**
+Current Version: **0.2.0**
 
 ## 🕹️ Modules
 

@@ -1,3 +1,10 @@
+Version: **0.2.0**
+
+Date Released: **01/08/2026**
+
+- Fully functional web app for interactive netlist visualization
+- Downloadable `.json` visualization from graph input
+
 Version: **0.1.2**
 
 Date Released: **12/21/2025**

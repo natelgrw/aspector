@@ -135,6 +135,10 @@ def reconstruct_circuit(data):
                 label = details.get('dc_param_name', 'DC')
                 params[label] = feat[5]
         
+        # Debugging: Check reconstructed params
+        if not params and feat:
+             print(f"[DEBUG] {name}: No params found. Feat: {feat}")
+        
         components[name] = {
             "type": get_label(feat[0] if feat else None, COMP_TYPE_MAP),
             "parameters": params,

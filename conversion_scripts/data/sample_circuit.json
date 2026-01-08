@@ -4,10 +4,10 @@
       "tempc": 27.0,
       "fet_num": 7.0,
       "perf_specs": {
-        "gain": 0,
-        "UGBW": 0,
-        "PM": 0,
-        "power": 0
+        "gain": 1.97,
+        "UGBW": 4280000000.0,
+        "PM": 83.8,
+        "power": 0.000113
       },
       "filename": "sample_netlist.scs"
     },
