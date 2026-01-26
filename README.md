@@ -4,7 +4,7 @@ ASPECTOR is a software suite under active development that aids engineers in des
 
 This repository serves as a home base for ASPECTOR, containing a deployable graph visualization web app for visualizing `.scs` netlists and miscellaneous scripts for data type conversion.
 
-Current Version: **0.2.0**
+Current Version: **0.2.3**
 
 ## 🕹️ Modules
 
@@ -20,7 +20,7 @@ Source code and instructions for use can be found [here](https://github.com/nate
 
 ### ⚡ ASPECTOR Core
 
-Current Version: **1.0.0**
+Current Version: **1.3.0**
 
 ASPECTOR Core is a Cadence Spectre based simulation pipeline that searches a wide Analog design space and fine tunes sizing and bias parameters to meet target circuit performance specs.
 

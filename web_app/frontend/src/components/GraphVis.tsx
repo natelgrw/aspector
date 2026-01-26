@@ -1,72 +1,61 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 import type { CircuitData, GraphData, GraphNode } from '../types';
-import { Download, Maximize2 } from 'lucide-react';
+
 
 interface GraphVisProps {
     data: CircuitData | null;
-    onNodeClick: (node: GraphNode | null) => void;
     onDownloadJson: () => void;
+    onClose: () => void;
 }
 
 const COMPONENT_COLORS: Record<string, string> = {
-    nfet: '#3B82F6',     // Blue-500
-    pfet: '#A855F7',     // Purple-500
-    resistor: '#F97316', // Orange-500
-    capacitor: '#EAB308',// Yellow-500
-    vsource: '#EF4444',  // Red-500
-    isource: '#EF4444',  // Red-500
-    default: '#6B7280'   // Gray-500
+    nfet: '#0052FF',     // Coinbase Blue
+    pfet: '#627EEA',     // ETH Purple
+    resistor: '#F7931A', // BTC Orange
+    capacitor: '#1652F0',// Darker Blue
+    vsource: '#00C076',  // Success Green
+    isource: '#00C076',  // Success Green
+    default: '#58667E'   // Slate Gray
 };
-const NET_COLOR = '#10B981'; // emerald-500
-const EDGE_COLOR = '#9CA3AF'; // gray-400
+const NET_COLOR = '#050F19'; // Almost Black for Nets
+const EDGE_COLOR = '#E2E8F0'; // Light Gray for Edges
 
-const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }) => {
+const GraphVis: React.FC<GraphVisProps> = ({ data, onDownloadJson, onClose }) => {
     const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
     const containerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = React.useState({ w: 800, h: 600 });
     const [graphData, setGraphData] = React.useState<GraphData>({ nodes: [], links: [] });
 
     useEffect(() => {
-        if (!data) return;
-
-        // Transform data to graph format
-        // The endpoint returns `full_json` which is `CircuitData` format. 
-        // We need to convert this to nodes/links for the graph.
+        if (!data || !data.graph) return;
 
         const nodes: GraphNode[] = [];
         const links: any[] = [];
 
-        // Add components
-        Object.keys(data.components).forEach(name => {
+        // Add nodes
+        Object.entries(data.graph.nodes).forEach(([id, nodeData]) => {
+            const isComponent = nodeData.type === 'COMPONENT';
             nodes.push({
-                id: name,
-                label: name,
-                group: 'component',
-                type: data.components[name].type,
-                val: 10 // size
+                id: id,
+                label: id,
+                group: isComponent ? 'component' : 'net',
+                type: nodeData.subtype || nodeData.type,
+                val: isComponent ? 10 : 7,
+                properties: nodeData
             });
+        });
 
-            // Add links
-            data.components[name].terminals.forEach(t => {
+        // Add edges
+        if (data.graph.edges) {
+            data.graph.edges.forEach(edge => {
                 links.push({
-                    source: name,
-                    target: t.net,
-                    label: t.terminal
+                    source: edge.source,
+                    target: edge.target,
+                    label: edge.pin
                 });
             });
-        });
-
-        // Add nets
-        Object.keys(data.nets).forEach(name => {
-            nodes.push({
-                id: name,
-                label: name,
-                group: 'net',
-                type: data.nets[name].type,
-                val: 7 // size
-            });
-        });
+        }
 
         setGraphData({ nodes, links });
 
@@ -91,8 +80,6 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }
     useEffect(() => {
         if (fgRef.current && graphData.nodes.length > 0) {
             fgRef.current.d3Force('charge')?.strength(-300);
-
-            // Auto-zoom with a slight delay to ensure rendering is ready
             setTimeout(() => {
                 fgRef.current?.zoomToFit(400, 50);
             }, 200);
@@ -103,7 +90,7 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }
         const label = node.label;
         const fontSize = 12 / globalScale;
 
-        ctx.font = `${fontSize}px Sans-Serif`;
+        ctx.font = `600 ${fontSize}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
         // Draw shape
         const color = node.group === 'component'
@@ -116,10 +103,8 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }
         const size = node.group === 'component' ? 6 : 4;
 
         if (node.group === 'component') {
-            // Circle
             ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
         } else {
-            // Square (Net)
             ctx.rect(node.x - size, node.y - size, size * 2, size * 2);
         }
 
@@ -128,13 +113,13 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }
         // Draw label
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#374151'; // gray-700
+        ctx.fillStyle = '#050F19'; // Almost Black text
         ctx.fillText(label, node.x, node.y + size + fontSize + 2);
 
         // Draw type label small
         if (globalScale > 1.5) {
-            ctx.fillStyle = '#9CA3AF'; // gray-400
-            ctx.font = `${fontSize * 0.8}px Sans-Serif`;
+            ctx.fillStyle = '#58667E'; // Secondary Gray
+            ctx.font = `${fontSize * 0.8}px Inter, sans-serif`;
             ctx.fillText(`(${node.type.toUpperCase()})`, node.x, node.y + size + fontSize * 2 + 2);
         }
 
@@ -143,67 +128,54 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onNodeClick, onDownloadJson }
     if (!data) return null;
 
     return (
-        <div ref={containerRef} className="w-full h-full relative bg-gray-50/50">
+        <div ref={containerRef} className="w-full h-full relative bg-white">
             <ForceGraph2D
                 ref={fgRef}
                 width={dimensions.w}
                 height={dimensions.h}
                 graphData={graphData}
                 nodeLabel="label"
-                nodeColor={node => node.group === 'component' ? (COMPONENT_COLORS[node.type] || COMPONENT_COLORS.default) : NET_COLOR}
                 linkColor={() => EDGE_COLOR}
-                linkWidth={1}
-                onNodeClick={(node) => onNodeClick(node as GraphNode)}
-                onBackgroundClick={() => onNodeClick(null)}
+                linkWidth={1.5}
                 nodeCanvasObject={handleNodePaint}
                 cooldownTicks={100}
                 backgroundColor="transparent"
             />
 
-            <div className="absolute top-4 right-4 flex gap-2">
+            <div className="absolute top-6 right-6 flex gap-3">
                 <button
                     onClick={() => fgRef.current?.zoomToFit(400)}
-                    className="p-2 bg-white hover:bg-gray-50 rounded text-gray-500 shadow-sm border border-gray-200 transition-colors"
-                    title="Fit to view"
+                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300"
                 >
-                    <Maximize2 size={20} />
+                    Reset View
                 </button>
 
                 <button
                     onClick={onDownloadJson}
-                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded shadow-sm transition-colors font-medium text-sm"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium text-sm transition-all shadow-sm hover:shadow"
                 >
-                    <Download size={16} />
                     Download JSON
+                </button>
+
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300"
+                >
+                    Close
                 </button>
             </div>
 
-            <div className="absolute bottom-4 left-4 flex gap-4 text-xs font-mono">
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: COMPONENT_COLORS.default }}></div>
-                    <span className="text-gray-600 font-sans font-medium">Component</span>
+            <div className="absolute bottom-6 left-6 flex flex-wrap gap-2 max-w-[80%]">
+                <div className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: NET_COLOR }}></div>
+                    <span className="text-gray-900 font-medium text-xs">Net</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: NET_COLOR }}></div>
-                    <span className="text-gray-600 font-sans font-medium">Net</span>
-                </div>
-                {/* Specific Component Legends */}
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: COMPONENT_COLORS.nfet }}></div>
-                    <span className="text-gray-500 text-[10px] font-sans">NFET</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: COMPONENT_COLORS.pfet }}></div>
-                    <span className="text-gray-500 text-[10px] font-sans">PFET</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: COMPONENT_COLORS.resistor }}></div>
-                    <span className="text-gray-500 text-[10px] font-sans">Res</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full" style={{ background: COMPONENT_COLORS.capacitor }}></div>
-                    <span className="text-gray-500 text-[10px] font-sans">Cap</span>
-                </div>
+                {Object.entries(COMPONENT_COLORS).filter(([k]) => k !== 'default').map(([type, color]) => (
+                    <div key={type} className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }}></div>
+                        <span className="text-gray-600 font-medium text-xs uppercase">{type}</span>
+                    </div>
+                ))}
             </div>
         </div>
     );

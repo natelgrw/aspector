@@ -24,11 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class PerfSpecs(BaseModel):
-    gain: float
-    UGBW: float
-    PM: float
-    power: float
+
 
 @app.get("/health")
 async def health_check():
@@ -36,21 +32,14 @@ async def health_check():
 
 @app.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
-    perf_specs: str = Form(...) 
+    file: UploadFile = File(...)
 ):
     """
-    Uploads a .scs file, converts it to a graph using the provided performance specs,
+    Uploads a .scs file, converts it to a graph,
     and returns the graph data for visualization and JSON download.
     """
     if not file.filename.endswith(".scs"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .scs file.")
-
-    try:
-        # Parse perf_specs JSON string
-        specs_dict = json.loads(perf_specs)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON format for perf_specs.")
 
     # Create a temporary directory to save the uploaded file
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -65,21 +54,10 @@ async def upload_file(
         
         try:
             # Convert to graph
-            # parse_file expects perf_specs dict
-            graph_data = converter.parse_file(temp_file_path, perf_specs=specs_dict)
+            graph_data = converter.parse_file(temp_file_path)
             
-            # Convert to JSON structure (reuse graph_to_json logic)
-            # If graph_data is a single object (hetero or dict), wrap it in list or handle directly
-            # The reconstruct_circuit function handles one graph object
-            
+            # Convert to JSON structure
             structured_data = reconstruct_circuit(graph_data)
-            
-            structured_data = reconstruct_circuit(graph_data)
-            
-            # Inject filename into metadata for frontend reference
-            if 'metadata' not in structured_data:
-                structured_data['metadata'] = {}
-            structured_data['metadata']['filename'] = file.filename
 
             # Prepare response
             # We return the structured data which contains:

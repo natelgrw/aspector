@@ -1,3 +1,21 @@
+Version **0.2.3**
+
+- ASPECTOR Core v1.3.0 Release
+- Updated circuit visualizer web app to handle new netlist and graph format
+
+Version **0.2.2**
+
+Date Released: **01/24/2026**
+
+- ASPECTOR Core v1.2.0 Release
+- Conversion script handling
+
+Version **0.2.1**
+
+Date Released: **01/22/2026**
+
+- ASPECTOR Core v1.1.0 Release
+
 Version: **0.2.0**
 
 Date Released: **01/08/2026**

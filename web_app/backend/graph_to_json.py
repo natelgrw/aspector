@@ -121,38 +121,40 @@ def reconstruct_circuit(data):
 
     # map components
     components = {}
+    edges_list = []
+    
     for i, name in enumerate(comp_names):
         feat = comp_feats[i] if i < len(comp_feats) else []
         details = comp_details[i] if i < len(comp_details) else {}
         
         params = {}
         if len(feat) >= 6:
-            if feat[1] > 0: params['L'] = feat[1]
-            if feat[2] > 0: params['nfin'] = int(feat[2])
-            if feat[3] > 0: params['nR'] = feat[3]
-            if feat[4] > 0: params['nC'] = feat[4]
-            if feat[5] != 0:
-                label = details.get('dc_param_name', 'DC')
+            # Reconstruct params from features if details missing (fallback)
+            if 'l' not in details and feat[1] > 0: params['l'] = feat[1]
+            if 'nfin' not in details and feat[2] > 0: params['nfin'] = int(feat[2])
+            if 'r' not in details and feat[3] > 0: params['r'] = feat[3]
+            if 'c' not in details and feat[4] > 0: params['c'] = feat[4]
+            if 'dc' not in details and feat[5] != 0:
+                label = details.get('dc_param_name', 'dc')
                 params[label] = feat[5]
         
-        # Debugging: Check reconstructed params
-        if not params and feat:
-             print(f"[DEBUG] {name}: No params found. Feat: {feat}")
+        # Merge details into params, preferring details
+        final_params = {**params, **details}
+
+        subtype = get_label(feat[0] if feat else None, COMP_TYPE_MAP)
         
         components[name] = {
-            "type": get_label(feat[0] if feat else None, COMP_TYPE_MAP),
-            "parameters": params,
-            "terminals": []
+            "type": "COMPONENT",
+            "subtype": subtype
         }
 
     # map nets
     nets = {}
     for i, name in enumerate(net_names):
-        feat = net_feats[i] if i < len(net_feats) else []
-        type_str = get_label(feat[0] if feat else None, NET_TYPE_MAP)
+        # We don't store subtype for nets in target, just type=NET
+        # But we can keep it if useful later, for now strict adherence
         nets[name] = {
-            "type": type_str,
-            "connected_components": []
+            "type": "NET"
         }
 
     # map edges 
@@ -166,18 +168,20 @@ def reconstruct_circuit(data):
         
         term_name = get_label(attr, TERM_MAP)
         
-        components[c_name]["terminals"].append({
-            "terminal": term_name,
-            "net": n_name
+        edges_list.append({
+            "source": c_name,
+            "target": n_name,
+            "pin": term_name
         })
-        
-        if c_name not in nets[n_name]["connected_components"]:
-            nets[n_name]["connected_components"].append(c_name)
 
     return {
-        "metadata": metadata,
-        "components": components,
-        "nets": nets
+        "topology_id": 1, 
+        "netlist": metadata.get('filename', 'unknown.scs'), 
+        "graph": {
+            "directed": False,
+            "nodes": {**components, **nets},
+            "edges": edges_list
+        }
     }
 
 

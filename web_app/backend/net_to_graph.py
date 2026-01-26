@@ -76,7 +76,7 @@ class NetlistToGraph:
                 return 0.0
         return 0.0
 
-    def parse_file(self, file_path, perf_specs=None):
+    def parse_file(self, file_path):
         """
         Parses a .scs netlist file into a .pt graph.
         """
@@ -129,7 +129,7 @@ class NetlistToGraph:
                 comp = self._parse_component_line(line, {}, params, prefix="top")
                 if comp: flat_components.append(comp)
                 
-        return self._build_hetero_data(flat_components, params, perf_specs)
+        return self._build_hetero_data(flat_components, params, os.path.basename(file_path))
 
     def _parse_component_line(self, line, port_map, params, prefix=""):
         line = line.split('*')[0].strip()
@@ -216,7 +216,7 @@ class NetlistToGraph:
             'params': sizing
         }
 
-    def _build_hetero_data(self, components, global_params, perf_specs):
+    def _build_hetero_data(self, components, global_params, filename="unknown.scs"):
         """
         Build hetero data from components.
         """
@@ -263,7 +263,7 @@ class NetlistToGraph:
         metadata = {
             'tempc': global_params.get('tempc', 27.0),
             'fet_num': global_params.get('fet_num', 0),
-            'perf_specs': perf_specs or {}
+            'filename': filename
         }
 
         if not HeteroData:
@@ -302,11 +302,15 @@ if __name__ == "__main__":
     converter = NetlistToGraph()
     
     path = "data/sample_netlist.scs"
-    specs = {"gain": 1.97, "UGBW": 4.28e9, "PM": 83.8, "power": 0.000113}
 
     if os.path.exists(path):
-        graph = converter.parse_file(path, perf_specs=specs)
+        graph = converter.parse_file(path)
         print("Graph generated successfully with numeric parameters.")
+        
+        output_path = "data/sample_graph.pt"
+        torch.save(graph, output_path)
+        print(f"Graph saved to {output_path}")
+
         if isinstance(graph, dict):
             print(f"Nodes: {len(graph['nodes']['component'])} components")
             print("First component feature:", graph['features']['component'][0])
