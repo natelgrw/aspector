@@ -1,6 +1,6 @@
-# ASPECTOR: Generative AI for Op-Amp Design
+# ASPECTOR
 
-ASPECTOR is a software suite under active development that aids engineers in designing op-amps at the netlist-transistor level. The eventual goal of ASPECTOR is to train a foundation model capable of automating op-amp design across the entire topology and parametization space.
+A software suite under active development that aids engineers in designing op-amps at the netlist-transistor level. The eventual goal of ASPECTOR is to train a foundation model capable of automating op-amp design across the entire topology and parametization space.
 
 This repository serves as a home base for ASPECTOR, containing a deployable graph visualization web app for visualizing `.scs` netlists and miscellaneous scripts for data type conversion.
 
