@@ -105,8 +105,24 @@ class NetlistToGraph:
         # flatten
         flat_components = []
         lines = top_content.split('\n')
+        
+        in_topology = False
+        
         for line in lines:
             line = line.strip()
+            
+            # State machine for topology section
+            if '*--- TOPOLOGY ---*' in line:
+                in_topology = True
+                continue
+            if '*--- TESTBENCH ---*' in line:
+                in_topology = False
+                continue
+                
+            # Only parse if in topology section
+            if not in_topology:
+                continue
+
             if not line or line.startswith('*') or line.startswith('simulator') or line.startswith('global') or line.startswith('parameters') or line.startswith('include'):
                 continue
             
@@ -158,7 +174,46 @@ class NetlistToGraph:
         mapped_nets = [port_map.get(n, n) for n in nets_list]
         
         comp_params_str = " ".join(parts[type_idx+1:])
-        comp_params = dict(re.findall(r'(\w+)=([\w\.\+-e]+)', comp_params_str))
+        
+        # Robust parsing for params to capture raw strings (including expressions)
+        raw_params = {}
+        tokens = comp_params_str.split()
+        
+        current_key = None
+        current_val_tokens = []
+        
+        for token in tokens:
+            # Check if this token looks like a "key=..." start
+            # We assume keys are valid identifiers.
+            if re.match(r'^[a-zA-Z_]\w*=', token):
+                # If we were building a value for a previous key, save it
+                if current_key:
+                    raw_params[current_key] = " ".join(current_val_tokens)
+                
+                # Start new key
+                k, v = token.split('=', 1)
+                current_key = k
+                current_val_tokens = [v] if v else []
+            else:
+                # Continue building current value
+                if current_key is not None:
+                    current_val_tokens.append(token)
+        
+        # Save the last one
+        if current_key:
+            raw_params[current_key] = " ".join(current_val_tokens)
+
+        # For backward compatibility / numeric features, try to parse simple numbers from these raw strings
+        comp_params = {}
+        for k, v in raw_params.items():
+            # Try to match simple number
+            match = re.match(r'^([\w\.\+-e]+)$', v)
+            if match:
+                comp_params[k] = match.group(1)
+            else:
+                # If complex expression, we can't easily get a number. 
+                # Leave it out of comp_params (numeric) or set to 0 later via get() default
+                pass
         
         # Helper to find positional value if named param is missing
         def find_positional_val():
@@ -196,6 +251,9 @@ class NetlistToGraph:
                     param_name = match.group(1)
                     sizing['dc_param_name'] = param_name
                     sizing['dc'] = params.get(param_name, sizing['dc'])
+                    
+        # Attach raw params (essential for pairing logic)
+        sizing['params_raw'] = raw_params
 
         # handle terminals
         terminals = []

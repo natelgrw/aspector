@@ -119,33 +119,50 @@ def reconstruct_circuit(data):
         edge_attrs = convert_to_serializable(edges.get('attr', []))
         comp_details = data.get('comp_details', [])
 
-    # map components
+    # map components and identify pairs
     components = {}
     edges_list = []
     
+    # helper to identify pairs: dict mapping (subtype, frozen_params) -> pair_id
+    pair_groups = {}
+    next_pair_id = 1
+
     for i, name in enumerate(comp_names):
         feat = comp_feats[i] if i < len(comp_feats) else []
         details = comp_details[i] if i < len(comp_details) else {}
         
-        params = {}
-        if len(feat) >= 6:
-            # Reconstruct params from features if details missing (fallback)
-            if 'l' not in details and feat[1] > 0: params['l'] = feat[1]
-            if 'nfin' not in details and feat[2] > 0: params['nfin'] = int(feat[2])
-            if 'r' not in details and feat[3] > 0: params['r'] = feat[3]
-            if 'c' not in details and feat[4] > 0: params['c'] = feat[4]
-            if 'dc' not in details and feat[5] != 0:
-                label = details.get('dc_param_name', 'dc')
-                params[label] = feat[5]
+        # We only care about raw params for pairing now
+        # params_raw is a dict of strings
+        raw_params = details.get('params_raw', {})
         
-        # Merge details into params, preferring details
-        final_params = {**params, **details}
-
+        # Create a signature for pairing: (subtype, sorted_items_of_raw_params)
+        # We need subtype first
         subtype = get_label(feat[0] if feat else None, COMP_TYPE_MAP)
         
+        # Sort items to ensure deterministic signature
+        # We assume if all raw params match, it's a pair.
+        # If raw_params is empty, we might not want to pair them (default logic?)
+        # Let's say we pair them if they are identical, even if empty (e.g. two generic resistors) regarding the new requirement?
+        # User said "show which transistors and/or resistors are paired".
+        # Usually implies critical matched pairs.
+        # If I have two different resistors both R=1k, are they a pair? Maybe.
+        # If I have two diff pairs (diff amp), definitely.
+        # Using raw string identity is a safe bet for "same intent".
+        
+        signature = (subtype, frozenset(sorted(raw_params.items())))
+        
+        if signature not in pair_groups:
+            pair_groups[signature] = next_pair_id
+            next_pair_id += 1
+        
+        pair_id = pair_groups[signature]
+
         components[name] = {
             "type": "COMPONENT",
-            "subtype": subtype
+            "subtype": subtype,
+            "pair_id": pair_id,
+            # We can optionally include raw params for debug/display if client wants it
+            # "params": raw_params 
         }
 
     # map nets

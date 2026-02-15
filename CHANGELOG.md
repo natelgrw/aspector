@@ -1,7 +1,20 @@
+Version **0.3.0**
+
+Date Released: **02/15/2026**
+
+- ASPECTOR Core v1.4.1 Release
+- ASPECTOR Crucible v1.2.0 Release
+- USPECT-256 Bit Vector Documentation
+- Revamped ASPECTOR Foundry to ASPECTOR Crucible
+- ASPECTOR Core v1.4.0 Release
+- Updated circuit visualizer web app for updated netlist syntax
+
 Version **0.2.3**
 
+Date Released: **02/05/2026**
+
 - ASPECTOR Core v1.3.0 Release
-- Updated circuit visualizer web app to handle new netlist and graph format
+- Updated circuit visualizer web app for updated netlist syntax
 
 Version **0.2.2**
 

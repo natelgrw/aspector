@@ -93,9 +93,18 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onDownloadJson, onClose }) =>
         ctx.font = `600 ${fontSize}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
         // Draw shape
-        const color = node.group === 'component'
-            ? (COMPONENT_COLORS[node.type] || COMPONENT_COLORS.default)
-            : NET_COLOR;
+        let color = NET_COLOR;
+
+        if (node.group === 'component') {
+            if (node.properties && node.properties.pair_id) {
+                // Generate a consistent color from pair_id
+                const pairId = node.properties.pair_id;
+                const hue = (pairId * 137.508) % 360; // Golden angle approximation for distinct colors
+                color = `hsl(${hue}, 70%, 50%)`;
+            } else {
+                color = COMPONENT_COLORS[node.type] || COMPONENT_COLORS.default;
+            }
+        }
 
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -120,7 +129,13 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onDownloadJson, onClose }) =>
         if (globalScale > 1.5) {
             ctx.fillStyle = '#58667E'; // Secondary Gray
             ctx.font = `${fontSize * 0.8}px Inter, sans-serif`;
-            ctx.fillText(`(${node.type.toUpperCase()})`, node.x, node.y + size + fontSize * 2 + 2);
+
+            let typeText = node.type.toUpperCase();
+            if (node.properties && node.properties.pair_id) {
+                typeText += ` (PAIR ${node.properties.pair_id})`;
+            }
+
+            ctx.fillText(typeText, node.x, node.y + size + fontSize * 2 + 2);
         }
 
     }, []);
@@ -145,38 +160,27 @@ const GraphVis: React.FC<GraphVisProps> = ({ data, onDownloadJson, onClose }) =>
             <div className="absolute top-6 right-6 flex gap-3">
                 <button
                     onClick={() => fgRef.current?.zoomToFit(400)}
-                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300"
+                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300 shadow-sm"
                 >
                     Reset View
                 </button>
 
                 <button
                     onClick={onDownloadJson}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium text-sm transition-all shadow-sm hover:shadow"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium text-sm transition-all shadow-sm hover:shadow-md"
                 >
                     Download JSON
                 </button>
 
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300"
+                    className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-gray-900 font-medium text-sm border border-gray-200 transition-all hover:border-gray-300 shadow-sm"
                 >
                     Close
                 </button>
             </div>
 
-            <div className="absolute bottom-6 left-6 flex flex-wrap gap-2 max-w-[80%]">
-                <div className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: NET_COLOR }}></div>
-                    <span className="text-gray-900 font-medium text-xs">Net</span>
-                </div>
-                {Object.entries(COMPONENT_COLORS).filter(([k]) => k !== 'default').map(([type, color]) => (
-                    <div key={type} className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }}></div>
-                        <span className="text-gray-600 font-medium text-xs uppercase">{type}</span>
-                    </div>
-                ))}
-            </div>
+
         </div>
     );
 };
