@@ -1,0 +1,13 @@
+{
+    "differential_telescopic_gain_boosted_ota_21fet_nmos": [],
+    "differential_three_stage_nmc_ota_nmos": [],
+    "differential_recycling_folded_cascode_ota_pmos": [],
+    "single_ended_cfoa_diamond": [],
+    "differential_multipath_feedforward_ota_nmos": [],
+    "single_ended_reversed_nested_miller_nmos": [],
+    "single_ended_reversed_nested_miller_ota_nmos": [],
+    "differential_two_stage_miller_ota_nmos": [],
+    "differential_folded_cascode_ota_pmos": [],
+    "differential_folded_cascode_ota_complementary": [],
+    "differential_class_ab_ota_nmos": []
+}

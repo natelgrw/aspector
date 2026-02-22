@@ -99,7 +99,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onUpload, isLoading }) => {
                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
                                 SCS
                             </div>
-                            <div className="flex-1 text-left">
+                            <div className="flex-1 text-left min-w-0">
                                 <div className="font-bold text-gray-900 truncate">{file.name}</div>
                                 <div className="text-gray-500 text-xs font-mono">{(file.size / 1024).toFixed(1)} KB</div>
                             </div>

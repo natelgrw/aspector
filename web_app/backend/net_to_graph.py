@@ -167,6 +167,10 @@ class NetlistToGraph:
                 break
         
         if not type_found: return None
+        
+        # Skip source components
+        if type_found in ['vsource', 'isource', 'vcvs']:
+            return None
             
         nets_str = " ".join(parts[1:type_idx])
         nets_str = nets_str.replace('(', '').replace(')', '').strip()

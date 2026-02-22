@@ -1,3 +1,10 @@
+Version **0.3.1**
+
+Date Released: **02/22/2026**
+
+- ASPECTOR Core v1.4.2 Release
+- Updated circuit visualizer web app for updated netlist syntax
+
 Version **0.3.0**
 
 Date Released: **02/15/2026**
