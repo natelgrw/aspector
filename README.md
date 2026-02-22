@@ -6,7 +6,7 @@ This repository serves as a home base for ASPECTOR, containing a deployable grap
 
 Additionally, circuit topologies simulated with ASPECTOR are classified with a custom USPECT-256 vector bitmap to allow for machine learning model training. Documentation for this bitmap is stored in `USPECT_256_BITMAP.md`.
 
-Current Version: **0.3.0**
+Current Version: **0.3.1**
 
 ## 🕹️ Modules
 
@@ -22,7 +22,7 @@ Source code and instructions for use can be found [here](https://github.com/nate
 
 ### ⚡ ASPECTOR Core
 
-Current Version: **1.4.1**
+Current Version: **1.4.2**
 
 ASPECTOR Core is a Cadence Spectre based simulation pipeline that searches a wide Analog design space and fine tunes sizing and bias parameters in op-amp netlists to meet target circuit performance specs.
 
